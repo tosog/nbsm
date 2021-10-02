@@ -30,7 +30,7 @@ Der Smartmeter sendet ca. alle 10 Sekunden Daten. Die Daten werden je nach Modus
 # stdout modus:
 python3 nbsm.py --mode stdout
 
-# json endpoing modus:
+# json endpoint modus:
 python3 nbsm.py --mode json
 
 # mqtt server
