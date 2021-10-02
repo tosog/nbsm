@@ -53,6 +53,7 @@ def read_from_usb():
     while len(data) < 240:
             while tty.in_waiting > 0:
                 data += tty.read()
+            time.sleep(0.1)
     return data
 
 #main
