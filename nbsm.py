@@ -119,20 +119,30 @@ def publish_mqtt(jsdata):
     client.publish(cfgMqttMainTopic + "status/total/in", jsdata["total"]["in"])
     client.publish(cfgMqttMainTopic + "status/total/out", jsdata["total"]["out"])
 
+### main ###
+tty = serial.Serial(port='/dev/ttyUSB0', baudrate = 9600, parity =serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
 
-def read_from_usb():
-    tty = serial.Serial(port='/dev/ttyUSB0', baudrate = 9600, parity =serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=0)
-
-    data = bytearray()
-    while len(data) < 240:
-            while tty.in_waiting > 0:
-                data += tty.read()
-            time.sleep(0.1)
-    return data
-
-#main
+data = bytearray()
 
 while True:
-    data = read_from_usb()
-    if (len(data) == 240): # ignore data if invalid length (e.g. first read after start)
-        decrypt_msg(data)
+    while tty.in_waiting > 0:
+        readidx = len(data)
+        b = tty.read()
+        data += b
+        #print(b.hex(), end='', flush=True)
+        #print(" ", readidx)
+
+        startpos = data.find(b'\x7e\xa0')
+
+        if (startpos >= 0):
+            # found start position. calc corrected idx within the message
+            idx = readidx - startpos
+            if (idx == 2):
+                totallen = data[readidx]
+                data += tty.read(totallen - 1) #-1: length is already included
+                #print("process: ", data[startpos:].hex())
+                decrypt_msg(data[startpos:])
+                data = bytearray()
+
+    time.sleep(0.1)
+
